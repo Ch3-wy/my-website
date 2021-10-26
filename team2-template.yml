@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create s3 bucket and policy
+
+Parameters:
+
+  BucketName:
+    Type: String
+    Description: Bucket Name
+    Default: ch3-wy-bucket
+
+Resources:
+
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Description: Bucket on which we will attach and test bucket policy
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html      
+      BucketName:
+        Ref: BucketName
+
+  MyS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: MyS3Bucket
+      PolicyDocument:
+        Statement:
+        - Action: 's3:GetObject'
+          Effect: Allow
+          Principal: '*'
+          Resource:
+          - Fn::Sub: arn:aws:s3:::${MyS3Bucket}
+          - Fn::Sub: arn:aws:s3:::${MyS3Bucket}/*
+
