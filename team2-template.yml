@@ -7,6 +7,11 @@ Parameters:
     Type: String
     Description: Bucket Name
     Default: ch3-wy-bucket
+  
+  IAMUser:
+    Type: String
+    Description: IAM User
+    Default: githubs3
 
 Resources:
 
@@ -34,3 +39,11 @@ Resources:
           - Fn::Sub: arn:aws:s3:::${MyS3Bucket}
           - Fn::Sub: arn:aws:s3:::${MyS3Bucket}/*
 
+  MyIAMUser:
+    Type: AWS::IAM::User
+    Properties:
+      Path: /
+      UserName:
+        Ref: IAMUser
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonaS3FullAccess
