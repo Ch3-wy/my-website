@@ -1,49 +1,83 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Template to create s3 bucket and policy
-
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+    Generator: "former2"
+Description: ""
 Parameters:
+    MyIAMUser:
+        Type: "String"
+        Default: "githubs3"
 
-  BucketName:
-    Type: String
-    Description: Bucket Name
-    Default: ch3-wy-bucket
-  
-  IAMUser:
-    Type: String
-    Description: IAM User
-    Default: githubs3
+    MyS3Bucket:
+        Type: "String"
+        Default: "ch3-wy-bucket2"
 
 Resources:
+    S3Bucket:
+        Type: "AWS::S3::Bucket"
+        Properties:
+            BucketName: !Ref MyS3Bucket
 
-  MyS3Bucket:
-    Type: AWS::S3::Bucket
-    Description: Bucket on which we will attach and test bucket policy
-    Properties:
-      AccessControl: PublicRead
-      WebsiteConfiguration:
-        IndexDocument: index.html      
-      BucketName:
-        Ref: BucketName
+    S3BucketPolicy:
+        Type: "AWS::S3::BucketPolicy"
+        Properties:
+            Bucket: !Ref S3Bucket
+            PolicyDocument: 
+                Version: "2012-10-17"
+                Statement: 
+                  - 
+                    Sid: "AddPerm"
+                    Effect: "Allow"
+                    Principal: "*"
+                    Action: "s3:GetObject"
+                    Resource: 
+                      - !Sub "arn:aws:s3:::${S3Bucket}"
+                      - !Sub "arn:aws:s3:::${S3Bucket}/*"
 
-  MyS3BucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket:
-        Ref: MyS3Bucket
-      PolicyDocument:
-        Statement:
-        - Action: 's3:GetObject'
-          Effect: Allow
-          Principal: '*'
-          Resource:
-          - Fn::Sub: arn:aws:s3:::${MyS3Bucket}
-          - Fn::Sub: arn:aws:s3:::${MyS3Bucket}/*
+    IAMUser:
+        Type: "AWS::IAM::User"
+        Properties:
+            Path: "/"
+            UserName: !Ref MyIAMUser
+            ManagedPolicyArns: 
+              - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 
-  MyIAMUser:
-    Type: AWS::IAM::User
-    Properties:
-      Path: /
-      UserName:
-        Ref: IAMUser
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/AmazonaS3FullAccess
+    CloudFrontDistribution:
+        Type: "AWS::CloudFront::Distribution"
+        Properties:
+            DistributionConfig: 
+                Origins: 
+                  - 
+                    ConnectionAttempts: 3
+                    ConnectionTimeout: 10
+                    DomainName: !Sub "${S3Bucket}.s3.${AWS::Region}.amazonaws.com"
+                    Id: !Sub "${S3Bucket}.s3.${AWS::Region}.amazonaws.com"
+                    OriginPath: ""
+                    S3OriginConfig: 
+                        OriginAccessIdentity: ""
+                OriginGroups: 
+                    Quantity: 0
+                DefaultCacheBehavior: 
+                    AllowedMethods: 
+                      - "HEAD"
+                      - "GET"
+                    CachedMethods: 
+                      - "HEAD"
+                      - "GET"
+                    Compress: true
+                    CachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6"
+                    SmoothStreaming: false
+                    TargetOriginId: !Sub "${S3Bucket}.s3.${AWS::Region}.amazonaws.com"
+                    ViewerProtocolPolicy: "redirect-to-https"
+                Comment: ""
+                PriceClass: "PriceClass_All"
+                Enabled: true
+                ViewerCertificate: 
+                    CloudFrontDefaultCertificate: true
+                    MinimumProtocolVersion: "TLSv1"
+                Restrictions: 
+                    GeoRestriction: 
+                        RestrictionType: "none"
+                HttpVersion: "http2"
+                DefaultRootObject: "index.html"
+                IPV6Enabled: true
+
